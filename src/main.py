@@ -48,57 +48,61 @@ def task_all():
     print(response_body)
     return jsonify(response_body), 200
 
-# get all tasks
-@app.route('/task/<user>', methods=['GET'])
-def task_user():
-    todos = Tasks.query.all()
-    response_body = list(map(lambda x: x.serialize(), todos))
-    print(response_body)
-    return jsonify(response_body), 200
+# # get all tasks
+# @app.route('/task/<user>', methods=['GET'])
+# def task_user():
+#     todos = Tasks.query.all()
+#     response_body = list(map(lambda x: x.serialize(), todos))
+#     print(response_body)
+#     return jsonify(response_body), 200
 
 # post a task
 @app.route('/task', methods=['POST'])
 def task_add():
-    todo = response.json
+    todo = request.json
+    body = request.get_json()
+    
     new_task = Tasks(label=todo["label"], done=todo["done"], user=todo["user"])
     db.session.add(new_task)
     db.session.commit()
     
     # query all tasks and return
-    all_todo = Tasks.query.all()
-    response_body = list(map(lambda x: x.serialize(), all_todo))
-    print(response_body)
+    updated_tasks = Tasks.query.filter_by(user=body["user"])
+    response_body = list(map(lambda x: x.serialize(), updated_tasks))
     return jsonify(response_body), 200
 
+
+# update task for specific task id
 @app.route('/task/<int:task_id>', methods=['PUT'])
-def task_add(task_id):
+def task_update(task_id):
     
-    body = response.get_json()
+    body = request.get_json()
     
-    putlist = Tasks.query.get(task_id)
-    putlist.label = body["label"]
-    putlist.done = body["done"]
-    do.session.commit()
+    updated_task = Tasks.query.get(task_id)
     
-    post_to_do = Tasks.query.filter_by(user=body["user"])
-    response_body = list(map(lambda x: x.serialize(), post_to_do))
+    if updated_task is None:
+        raise APIException('User not found', status_code=404)
+    if "label" in body:
+        updated_task.label = body["label"]
+    if "done" in body:
+        updated_task.done = body["done"]
+    db.session.commit()
+    
+    updated_tasks = Tasks.query.filter_by(user=body["user"])
+    response_body = list(map(lambda x: x.serialize(), updated_tasks))
     return jsonify(response_body), 200
 
 # delete a task
 @app.route('/task/<user>/<int:task_id>', methods=['DELETE'])
-def task_delete(task_id):
-    body = request.json
-    delete_ = Tasks.query.get(task_id)
-    if user1 is None:
-    raise APIException('User not found', status_code=404)
-    db.session.delete(user1)
+def task_delete(user, task_id):
+    delete_task = Tasks.query.get(task_id)
+    if delete_task is None:
+        raise APIException('Task id not found', status_code=404)
+    db.session.delete(delete_task)
     db.session.commit()
-    delete_member = jackson_family.delete_member(member_id)
-    response_body = {
-        "deleted_member": delete_member
-    }
-    if not delete_member:
-        return 'The member does not exist', 400
+    
+    updated_tasks = Tasks.query.filter_by(user=user)
+    response_body = list(map(lambda x: x.serialize(), updated_tasks))
     return jsonify(response_body), 200
 
 
