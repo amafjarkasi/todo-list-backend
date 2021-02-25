@@ -48,6 +48,14 @@ def task_all():
     print(response_body)
     return jsonify(response_body), 200
 
+# get all tasks
+@app.route('/task/<user>', methods=['GET'])
+def task_user():
+    todos = Tasks.query.all()
+    response_body = list(map(lambda x: x.serialize(), todos))
+    print(response_body)
+    return jsonify(response_body), 200
+
 # post a task
 @app.route('/task', methods=['POST'])
 def task_add():
@@ -62,11 +70,25 @@ def task_add():
     print(response_body)
     return jsonify(response_body), 200
 
+@app.route('/task/<int:task_id>', methods=['PUT'])
+def task_add(task_id):
+    
+    body = response.get_json()
+    
+    putlist = Tasks.query.get(task_id)
+    putlist.label = body["label"]
+    putlist.done = body["done"]
+    do.session.commit()
+    
+    post_to_do = Tasks.query.filter_by(user=body["user"])
+    response_body = list(map(lambda x: x.serialize(), post_to_do))
+    return jsonify(response_body), 200
+
 # delete a task
-@app.route('/task/<int:task_id>', methods=['DELETE'])
+@app.route('/task/<user>/<int:task_id>', methods=['DELETE'])
 def task_delete(task_id):
     body = request.json
-    user1 = Person.query.get(person_id)
+    delete_ = Tasks.query.get(task_id)
     if user1 is None:
     raise APIException('User not found', status_code=404)
     db.session.delete(user1)
