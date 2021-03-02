@@ -101,8 +101,9 @@ def task_delete(user, task_id):
     db.session.delete(delete_task)
     db.session.commit()
     
-    updated_tasks = Tasks.query.filter_by(user=user)
+    updated_tasks = Tasks.query.filter_by(user=user).all()
     response_body = list(map(lambda x: x.serialize(), updated_tasks))
+    print(response_body)
     return jsonify(response_body), 200
 
 
